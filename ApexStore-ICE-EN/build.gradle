@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.zeroc.gradle.ice-builder.slice' version '1.5.2'
+}
+
+group = 'com.apexstore'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.zeroc:ice:3.7.11'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+// The 4 nodes of the diagram run as 4 independent processes.
+// Usage: ./gradlew runNode4 | runNode3 | runNode2 | runNode1
+def node = { String taskName, String mainClassName ->
+    tasks.register(taskName, JavaExec) {
+        group = 'apexstore'
+        classpath = sourceSets.main.runtimeClasspath
+        mainClass = mainClassName
+        standardInput = System.in
+        if (project.hasProperty('appArgs')) {
+            args project.property('appArgs').split(' ')
+        }
+    }
+}
+node('runNode4', 'com.apexstore.persistence.Node4PersistenceServer')
+node('runNode3', 'com.apexstore.gateways.Node3GatewaysServer')
+node('runNode2', 'com.apexstore.backend.Node2BackendServer')
+node('runNode1', 'com.apexstore.client.Node1ClientApp')
